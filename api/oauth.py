@@ -28,12 +28,13 @@ def authorize(token_helper: lightspeed.TokenHelper = Depends(
 @router.get("/callback")
 async def callback(
     code: str,
+    domain_prefix: str,
     token_helper: lightspeed.TokenHelper = Depends(
         dependencies.get_lightspeed_token_helper),
 ):
     """Callback endpoint forLightspeed OAuth Integration"""
     try:
-        await token_helper.exchange_code(code)
+        await token_helper.exchange_code(domain_prefix, code)
         return {"detail": "Token successfully created. Authorization complete"}
     except Exception as e:
         raise HTTPException(

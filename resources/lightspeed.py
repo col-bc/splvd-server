@@ -8,7 +8,8 @@ import httpx as http
 from beanie import Document
 from pydantic import Field
 
-from config import LIGHTSPEED_CLIENT_ID, LIGHTSPEED_SECRET_KEY
+from config import (LIGHTSPEED_CLIENT_ID, LIGHTSPEED_REDIRECT_URI,
+                    LIGHTSPEED_SECRET_KEY)
 
 
 class AuthToken(Document):
@@ -18,8 +19,10 @@ class AuthToken(Document):
     expires_at: datetime = Field(...)
     token_type: str = Field(...)
     scope: str = Field(...)
+    domain_prefix: str
     refresh_token: str = Field(...)
     created_at: datetime = Field(datetime.utcnow())
+    
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -40,6 +43,7 @@ class AuthToken(Document):
             "token_type": self.token_type,
             "scope": self.scope,
             "refresh_token": self.refresh_token,
+            "domain_prefix": self.domain_prefix,
             "is_expired": self.expired,
             "created_at": self.created_at.isoformat(),  # pylint: disable=no-member
         }
@@ -58,6 +62,7 @@ class TokenHelper:
     def __init__(self, client_id: str, secret_key: str):
         self.client_id = client_id or LIGHTSPEED_CLIENT_ID
         self.secret_key = secret_key or LIGHTSPEED_SECRET_KEY
+        self.redirect_uri = LIGHTSPEED_REDIRECT_URI
         self.http = http.AsyncClient()
 
     @property
@@ -67,18 +72,20 @@ class TokenHelper:
 
     def get_user_consent(self):
         """Gets user consent for OAuth2.0 integration"""
-        url = f"https://cloud.lightspeedapp.com/oauth/authorize.php?response_type=code&client_id={self.client_id}&scope={self.scope}"
+        url = f"https://secure.vendhq.com/connect?response_type=code&client_id={self.client_id}&redirect_uri={self.redirect_uri}"
 
         return url
 
-    async def exchange_code(self, code: str) -> Optional[AuthToken]:
+    async def exchange_code(self, domain_prefix: str,
+                            code: str) -> Optional[AuthToken]:
         """Exchange authorization code for access token and inserts AccessToken into database"""
-        url = "https://cloud.lightspeedapp.com/oauth/access_token.php"
+        url = f"https://{domain_prefix}.vendhq.com/api/1.0/token"
         params = {
             "client_id": self.client_id,
             "client_secret": self.secret_key,
             "code": code,
             "grant_type": "authorization_code",
+            "redirect_uri": "https://colbyc.dev/api/oauth/token"
         }
         async with http.AsyncClient() as client:
             response = await client.post(url, params=params, timeout=5)

@@ -13,5 +13,7 @@ load_dotenv(dotenv_path=env_path)
 SECRET_KEY = environ.get("SECRET_KEY")
 LIGHTSPEED_CLIENT_ID = environ.get("LIGHTSPEED_CLIENT_ID")
 LIGHTSPEED_SECRET_KEY = environ.get("LIGHTSPEED_SECRET_KEY")
+LIGHTSPEED_REDIRECT_URI = environ.get("LIGHTSPEED_REDIRECT_URI")
+
 MONGO_DB_URI = environ.get("MONGO_DB_URI")
 MONGO_DB_NAME = environ.get("MONGO_DB_NAME")
