@@ -8,6 +8,8 @@ import httpx as http
 from beanie import Document
 from pydantic import Field
 
+from config import LIGHTSPEED_CLIENT_ID, LIGHTSPEED_SECRET_KEY
+
 
 class AuthToken(Document):
     """Lightspeed Token model"""
@@ -54,8 +56,8 @@ class TokenHelper:
     """
 
     def __init__(self, client_id: str, secret_key: str):
-        self.client_id = client_id
-        self.secret_key = secret_key
+        self.client_id = client_id or LIGHTSPEED_CLIENT_ID
+        self.secret_key = secret_key or LIGHTSPEED_SECRET_KEY
         self.http = http.AsyncClient()
 
     @property
