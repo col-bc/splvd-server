@@ -6,6 +6,7 @@ from typing import Optional
 
 import httpx as http
 from beanie import Document
+from fastapi.encoders import jsonable_encoder
 from pydantic import Field
 
 from config import (LIGHTSPEED_CLIENT_ID, LIGHTSPEED_REDIRECT_URI,
@@ -22,7 +23,6 @@ class AuthToken(Document):
     domain_prefix: str
     refresh_token: str = Field(...)
     created_at: datetime = Field(datetime.utcnow())
-    
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -36,17 +36,7 @@ class AuthToken(Document):
 
     def serialize(self) -> dict:
         """Returns json serializable object"""
-        return {
-            "id": self.id,
-            "access_token": self.access_token,
-            "expires_at": self.expires_at.isoformat(),  # pylint: disable=no-member
-            "token_type": self.token_type,
-            "scope": self.scope,
-            "refresh_token": self.refresh_token,
-            "domain_prefix": self.domain_prefix,
-            "is_expired": self.expired,
-            "created_at": self.created_at.isoformat(),  # pylint: disable=no-member
-        }
+        return jsonable_encoder(self)
 
     @classmethod
     async def read_latest_token(cls) -> Optional["AuthToken"]:
@@ -56,7 +46,10 @@ class AuthToken(Document):
 
 class TokenHelper:
     """Token helper class
-        This class is used to get the user consent URL and exchange the authorization code for an access token. Use it to create a new token or refresh an existing one.
+        This class is used to get the user consent URL and exchange the authorization
+        code for an access token. Use it to create a new token or refresh an existing one.
+        
+        See: https://x-series-api.lightspeedhq.com/docs/authorization
     """
 
     def __init__(self, client_id: str, secret_key: str):

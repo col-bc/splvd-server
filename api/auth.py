@@ -3,7 +3,7 @@
 """
 import re
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Response, status
 from fastapi.routing import APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
@@ -60,19 +60,19 @@ async def create_user(form_data: RegisterUserRequest):
             status_code=status.HTTP_409_CONFLICT,
             detail="User with this email already exists",
         )
-    if re.match(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$",
-                form_data.password):
+    if re.fullmatch(r'[A-Za-z0-9@#$%^&+=]{8,}', form_data.password):
         new_user = users.Account(
             email=form_data.email,
             full_name=form_data.full_name,
+            password=form_data.password,
         )
-        new_user.set_password(form_data.password)
         await new_user.insert()
-        return new_user.serialize()
+        return Response(status_code=status.HTTP_201_CREATED)
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail=
-        "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter and one number",
+        "Password must be at least 8 characters long and contain at least " \
+        "one uppercase letter, one lowercase letter and one number",
     )
 
 

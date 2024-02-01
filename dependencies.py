@@ -10,9 +10,10 @@ from resources import lightspeed, users
 token_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
-def get_current_user(token: str = Depends(token_scheme)) -> users.Account:
+async def get_current_user(token: str = Depends(
+    token_scheme)) -> users.Account:
     """Restrict resource to authenticated users"""
-    user = users.Account.check_token(token)
+    user = await users.Account.check_token(token)
     if user:
         return user
     raise HTTPException(
